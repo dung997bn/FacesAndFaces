@@ -35,6 +35,8 @@ namespace OrdersApi
                 Configuration.GetConnectionString("OrdersContextConnection")
                 ));
 
+            services.AddHttpClient();
+
             //Repository
             services.AddTransient<IOrderRepository, OrderRepository>();
 

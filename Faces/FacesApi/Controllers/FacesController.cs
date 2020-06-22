@@ -15,17 +15,27 @@ namespace FacesApi.Controllers
     [ApiController]
     public class FacesController : ControllerBase
     {
+        //[HttpPost]
+        //public async Task<List<byte[]>> ReadFaces()
+        //{
+        //    using (var ms = new MemoryStream(2048))
+        //    {
+        //        await Request.Body.CopyToAsync(ms);
+        //        var faces = GetFaces(ms.ToArray());
+        //        return faces;
+        //    }
+        //}
+
         [HttpPost]
-        public async Task<List<byte[]>> ReadFaces()
+        public async Task<Tuple<List<byte[]>, Guid>> ReadFaces(Guid orderId)
         {
             using (var ms = new MemoryStream(2048))
             {
                 await Request.Body.CopyToAsync(ms);
                 var faces = GetFaces(ms.ToArray());
-                return faces;
+                return new Tuple<List<byte[]>, Guid>(faces, orderId);
             }
         }
-
         private List<byte[]> GetFaces(byte[] image)
         {
             Mat src = Cv2.ImDecode(image, ImreadModes.Color);
@@ -46,7 +56,6 @@ namespace FacesApi.Controllers
                 j++;
             }
             return faceList;
-
         }
     }
 }
