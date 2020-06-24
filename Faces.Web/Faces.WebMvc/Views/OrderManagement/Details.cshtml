@@ -1,0 +1,31 @@
+﻿@model Faces.WebMvc.Models.OrderViewModel
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h3>Details</h3>
+
+Order Id: @Model.OrderId
+User Email: @Model.UserEmail
+Picture:
+<img src="@Model.ImageString" width="100px" height="100px"/>
+Order Status: @Model.StatusString
+
+<table class="table">
+    <thead>
+        <tr>
+            <td>Order Detail id</td>
+            <td>Image</td>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var detail in Model.OrderDetails)
+        {
+            <tr>
+                <td>@detail.OrderDetailId</td>
+                <td><img src="@detail.ImageString" width="40px" height="40px" /></td>
+            </tr>
+        }
+    </tbody>
+</table>
+

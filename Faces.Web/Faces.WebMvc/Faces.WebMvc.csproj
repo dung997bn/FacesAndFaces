@@ -10,6 +10,7 @@
     <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="6.3.2" />
     <PackageReference Include="MassTransit.RabbitMQ" Version="6.3.2" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.0-preview.5.20311.2" />
+    <PackageReference Include="refit" Version="5.1.67" />
   </ItemGroup>
 
   <ItemGroup>
