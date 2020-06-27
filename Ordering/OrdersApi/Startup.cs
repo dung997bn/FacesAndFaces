@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OrdersApi.Hubs;
 using OrdersApi.Messages.Consumers;
 using OrdersApi.Persistence;
 using OrdersApi.Services;
@@ -35,6 +36,12 @@ namespace OrdersApi
                 Configuration.GetConnectionString("OrdersContextConnection")
                 ));
 
+            services.AddSignalR()
+                .AddJsonProtocol(option =>
+                {
+                    option.PayloadSerializerOptions.PropertyNamingPolicy = null;
+                });
+
             services.AddHttpClient();
 
             //Repository
@@ -44,6 +51,7 @@ namespace OrdersApi
             services.AddMassTransit(c =>
             {
                 c.AddConsumer<RegisterOrderCommandConsumer>();
+                c.AddConsumer<OrderDispatchedEventConsumer>();
             });
             services.AddSingleton(provider => Bus.Factory.CreateUsingRabbitMq(
                 cfg =>
@@ -55,6 +63,15 @@ namespace OrdersApi
                         e.UseMessageRetry(x => x.Interval(2, TimeSpan.FromSeconds(10)));
                         e.Consumer<RegisterOrderCommandConsumer>(provider);
                     });
+
+                    cfg.ReceiveEndpoint(RabbitMQMassTransitConstants.OrderDispatchedServiceQueue, e =>
+                    {
+                        e.PrefetchCount = 16;
+                        e.UseMessageRetry(x => x.Interval(2, TimeSpan.FromSeconds(10)));
+                        e.Consumer<OrderDispatchedEventConsumer>(provider);
+                    });
+
+
 
                     cfg.ConfigureEndpoints(provider);
                 }));
@@ -85,6 +102,7 @@ namespace OrdersApi
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<OrderHub>("/orderhub");
             });
         }
     }

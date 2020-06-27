@@ -23,7 +23,7 @@ namespace Faces.WebMvc.Models
         public string PictureUrl { get; set; }
 
         [Display(Name = "Order Status")]
-        public string StatusString { get; set; }
+        public string Status { get; set; }
 
         public byte[] ImageData { get; set; }
         public string ImageString { get; set; }

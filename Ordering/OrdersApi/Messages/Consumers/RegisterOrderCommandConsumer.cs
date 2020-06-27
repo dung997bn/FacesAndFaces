@@ -1,6 +1,9 @@
 ﻿using MassTransit;
 using MessagingInterfacesContants.Commands;
+using MessagingInterfacesContants.Events;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
+using OrdersApi.Hubs;
 using OrdersApi.Models;
 using OrdersApi.Persistence;
 using System;
@@ -17,11 +20,13 @@ namespace OrdersApi.Messages.Consumers
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IHttpClientFactory _clientFactory;
+        private readonly IHubContext<OrderHub> _hubContext;
 
-        public RegisterOrderCommandConsumer(IOrderRepository orderRepository, IHttpClientFactory clientFactory)
+        public RegisterOrderCommandConsumer(IOrderRepository orderRepository, IHttpClientFactory clientFactory, IHubContext<OrderHub> hubContext)
         {
             _orderRepository = orderRepository;
             _clientFactory = clientFactory;
+            _hubContext = hubContext;
         }
 
         public async Task Consume(ConsumeContext<IRegisterOderCommand> context)
@@ -31,12 +36,23 @@ namespace OrdersApi.Messages.Consumers
                 && result.UserEmail != null && result.ImageData != null)
             {
                 SaveOrder(result);
+                await _hubContext.Clients.All.SendAsync("UpdateOrders", "New Order Created", result.OrderId);
 
                 var client = _clientFactory.CreateClient();
                 Tuple<List<byte[]>, Guid> orderDetailData = await GetFacesFromFaceApiAsync(client, result.ImageData, result.OrderId);
                 List<byte[]> faces = orderDetailData.Item1;
                 Guid orderId = orderDetailData.Item2;
                 SaveOrderDetails(orderId, faces);
+
+                await _hubContext.Clients.All.SendAsync("UpdateOrders", "Order processed", result.OrderId);
+
+                await context.Publish<IOrderProcessedEvent>(new
+                {
+                    OrderId = orderId,
+                    result.UserEmail,
+                    Faces = faces,
+                    result.PictureUrl
+                });
             }
         }
 
